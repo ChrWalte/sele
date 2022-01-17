@@ -30,13 +30,15 @@ app.UseAuthorization();
 // serve static files settings
 var fileLocation = configuration["ServingFiles:FileLocation"];
 var fileRequestPath = configuration["ServingFiles:RequestLocation"];
+var serveUnsafeFileTypes = bool.Parse(configuration["ServingFiles:ServeUnsafeFileTypes"]);
 var fileProvder = new PhysicalFileProvider(fileLocation);
 
 // enable serve static files
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = fileProvder,
-    RequestPath = fileRequestPath
+    RequestPath = fileRequestPath,
+    ServeUnknownFileTypes = serveUnsafeFileTypes
 });
 
 // NOT USED NOW!
