@@ -1,0 +1,15 @@
+
+# all hidden files and config files
+.*
+
+# other root files
+LICENSE
+VERSION
+README.md
+
+# bin and obj directories
+bin
+obj
+
+# vs user files
+.user
