@@ -1,15 +1,26 @@
 
-# all hidden files and config files
-.*
+# git source control files
+.git
+.gitignore
+
+# VARSION version control config file
+.atoolconfig.json
 
 # other root files
 LICENSE
 VERSION
 README.md
 
+# deploy files
+kube.deploy.yml
+docker-compose.yml
+
+# scripts folder
+/scripts
+
 # bin and obj directories
-bin
-obj
+**/bin
+**/obj
 
 # vs user files
-.user
+**/.user
