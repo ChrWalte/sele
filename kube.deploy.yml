@@ -1,0 +1,146 @@
+
+# ConfigMap holds configuration key:value pairs
+# these key:value pairs can be used as environment variables
+# secrets should not be stored in this map
+# https://kubernetes.io/docs/concepts/configuration/configmap/
+
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: sele-config
+data:
+  # the physical location of the files
+  SERVING_FILE_LOCATION: "/sele/files"
+  # the location of the files
+  SERVING_REQUEST_PATH: "/f"
+  # port number to expose
+  PORT_NUMBER: "80"
+  # serve unsafe file types like: file (no extension)
+  ENABLE_UNSAFE_SERVING: "true"
+
+---
+
+# PersistentVolume tells Kubernetes how much storage to allocate
+# https://kubernetes.io/docs/concepts/storage/volumes/#local
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sele-pv
+spec:
+  capacity:
+    storage: 20Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostPath:
+    path: /sele-data/
+
+---
+
+# PersistentVolumeClaim tells Kubernetes how much storage the application can claim
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sele-pvc
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+  volumeMode: Filesystem
+  volumeName: sele-pv
+
+---
+
+# Deployment is the object that describes how to run the container(s)
+# https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sele
+spec:
+  selector:
+    matchLabels:
+      app: sele
+  strategy:
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 50%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: sele
+    spec:
+      containers:
+        - name: sele
+          image: chrwalte/sele.beta:0.2.1beta
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "100Mi"
+            limits:
+              cpu: "100m"
+              memory: "100Mi"
+          env:
+            - name: SERVING_FILE_LOCATION
+              valueFrom:
+                configMapKeyRef:
+                  name: sele-config
+                  key: SERVING_FILE_LOCATION
+            - name: SERVING_REQUEST_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: sele-config
+                  key: SERVING_REQUEST_PATH
+            - name: PORT_NUMBER
+              valueFrom:
+                configMapKeyRef:
+                  name: sele-config
+                  key: PORT_NUMBER
+            - name: ENABLE_UNSAFE_SERVING
+              valueFrom:
+                configMapKeyRef:
+                  name: sele-config
+                  key: ENABLE_UNSAFE_SERVING
+          ports:
+            - containerPort: 80
+              name: my-name
+          volumeMounts:
+            - mountPath: /sele/files
+              name: files-to-serve
+      volumes:
+        - name: files-to-serve
+          persistentVolumeClaim:
+            claimName: sele-pvc
+      restartPolicy: Always
+
+---
+
+# Service exposes the ports to the world
+# https://kubernetes.io/docs/concepts/services-networking/service/
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: sele
+spec:
+  selector:
+    app: sele
+  type: NodePort
+  ports:
+    - name: sele
+      protocol: TCP
+      port: 8080
+      targetPort: 80
+      nodePort: 30001
+
+---
