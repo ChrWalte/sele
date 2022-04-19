@@ -44,9 +44,9 @@ or
 
 three docker containers are available:
 
-- [[beta-version]chrwalte/sele.beta:latest](https://hub.docker.com/repository/docker/chrwalte/sele.beta)
-- [[development-version]chrwalte/sele.dev:latest](https://hub.docker.com/repository/docker/chrwalte/sele.dev)
 - [[release-version]chrwalte/sele:latest](https://hub.docker.com/repository/docker/chrwalte/sele)
+- [[development-version]chrwalte/sele.dev:latest](https://hub.docker.com/repository/docker/chrwalte/sele.dev)
+- [STALE BETA BRANCH: FOREVER AT 0.2.1]-[[beta-version]chrwalte/sele.beta:0.2.1](https://hub.docker.com/repository/docker/chrwalte/sele.beta)
 
 the container holds only sele and the dotnet runtime.
 on startup the container will run:
@@ -81,14 +81,15 @@ first: one must have the kubernetes command line interface:
 
 next are the ways that one can use kubernetes (this is not all of them, this is what I have used when making this):
 
-- [minikube](https://minikube.sigs.k8s.io/docs/)
+- [minikube](https://minikube.sigs.k8s.io/docs/) (on windows or wsl)
+
   - ensure minikube is installed, up, and running
   - start a minikube mount for the folder to be served: `minikube mount 'host-path':'minikube-path'`
+    - Example: `minikube mount E:\\sele-share\:/sele/files`
   - run the deployment file: `kubectl apply -f kube.deploy.yml`
   - ensure everything is running: `kubectl get all`
   - expose the minikube nodeport: `minikube service sele`
-- ## [microk8s](https://microk8s.io/)
-  - TODO
+    - Or: `minikube service --all`
 
 ## usage
 
@@ -104,7 +105,7 @@ configuration file or/and environment variables:
 
 sele will read the configuration file to get the settings on how to serve the files.
 
-```json
+```jsonc
 // serving file settings
 "ServingFiles": {
   // the physical location of the files
@@ -127,7 +128,7 @@ sele will also check for environment variables that will override these configur
 # the physical location of the files
 SERVING_FILE_LOCATION=/sele/files
 # the location of the files
-SERVING_REQUEST_PATH=/f/i/l/e/s
+SERVING_REQUEST_PATH=/files
 # port number to serve on
 PORT_NUMBER=80
 # serve unsafe file types like: file (no extension)
