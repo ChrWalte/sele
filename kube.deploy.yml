@@ -1,4 +1,3 @@
-
 # ConfigMap holds configuration key:value pairs
 # these key:value pairs can be used as environment variables
 # secrets should not be stored in this map
@@ -16,17 +15,16 @@ data:
   # port number to expose
   PORT_NUMBER: "80"
   # serve unsafe file types like: file (no extension)
-  ENABLE_UNSAFE_SERVING: "true"
+  ENABLE_UNSAFE_SERVING: "false"
 
 ---
-
 # PersistentVolume tells Kubernetes how much storage to allocate
 # https://kubernetes.io/docs/concepts/storage/volumes/#local
 
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: sele-pv
+  name: sele-data-pv
 spec:
   capacity:
     storage: 20Gi
@@ -38,14 +36,34 @@ spec:
   hostPath:
     path: /sele-data/
 
----
+# ---
 
+# PersistentVolume tells Kubernetes how much storage to allocate
+# https://kubernetes.io/docs/concepts/storage/volumes/#local
+# PersistentVolume and PersistentVolumeClaim for appsettings.json file
+
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: sele-appsettings-pv
+# spec:
+#   capacity:
+#     storage: 20Gi
+#   volumeMode: Filesystem
+#   accessModes:
+#     - ReadWriteMany
+#   persistentVolumeReclaimPolicy: Retain
+#   storageClassName: manual
+#   hostPath:
+#     path: /sele-appsettings/
+
+---
 # PersistentVolumeClaim tells Kubernetes how much storage the application can claim
 
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: sele-pvc
+  name: sele-data-pvc
 spec:
   storageClassName: manual
   accessModes:
@@ -54,10 +72,27 @@ spec:
     requests:
       storage: 20Gi
   volumeMode: Filesystem
-  volumeName: sele-pv
+  volumeName: sele-data-pv
+
+# ---
+
+# PersistentVolumeClaim tells Kubernetes how much storage the application can claim
+
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: sele-appsettings-pvc
+# spec:
+#   storageClassName: manual
+#   accessModes:
+#     - ReadWriteMany
+#   resources:
+#     requests:
+#       storage: 20Gi
+#   volumeMode: Filesystem
+#   volumeName: sele-appsettings-pv
 
 ---
-
 # Deployment is the object that describes how to run the container(s)
 # https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
 
@@ -81,7 +116,7 @@ spec:
     spec:
       containers:
         - name: sele
-          image: chrwalte/sele.beta:0.2.1beta
+          image: chrwalte/sele:1.0.2
           imagePullPolicy: Always
           resources:
             requests:
@@ -113,18 +148,22 @@ spec:
                   key: ENABLE_UNSAFE_SERVING
           ports:
             - containerPort: 80
-              name: my-name
+              name: sele-port
           volumeMounts:
             - mountPath: /sele/files
               name: files-to-serve
+            # - mountPath: /sele/appsettings.json
+            #   name: appsettings-to-use
       volumes:
         - name: files-to-serve
           persistentVolumeClaim:
-            claimName: sele-pvc
+            claimName: sele-data-pvc
+        # - name: appsettings-to-use
+        #   persistentVolumeClaim:
+        #     claimName: sele-appsettings-pvc
       restartPolicy: Always
 
 ---
-
 # Service exposes the ports to the world
 # https://kubernetes.io/docs/concepts/services-networking/service/
 
@@ -144,3 +183,4 @@ spec:
       nodePort: 30001
 
 ---
+

@@ -1,9 +1,8 @@
-
 services:
   # sele docker container
   sele:
     # using the sele.beta docker image
-    image: "chrwalte/sele.beta:0.2.1beta"
+    image: "chrwalte/sele:1.0.2"
     # map this.external.port:this.internal.port in the container
     # currently https is not implmented
     # "external:internal"
@@ -17,7 +16,7 @@ services:
       # the physical location of the files
       - "SERVING_FILE_LOCATION=/sele/files"
       # the location of the files
-      - "SERVING_REQUEST_PATH=/f/i/l/e/s"
+      - "SERVING_REQUEST_PATH=/f"
       # port number to serve on
       - "PORT_NUMBER=80"
       # serve unsafe file types like: file (no extension)
@@ -27,7 +26,6 @@ services:
     # "host:container"
     volumes:
       - "./docker.static.files:/sele/files"
-
       # the below volume will allow for the settings file to be used inside the container
       # one can use this instead of the environment variables, but environment variables take priority
       # - "./src/appsettings.json:/sele/appsettings.json"
