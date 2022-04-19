@@ -2,10 +2,11 @@
 using Microsoft.Extensions.FileProviders;
 using sele;
 
+
+
 // builder for web application
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
 builder.Logging.AddConsole();
 
 // build the web application
@@ -20,6 +21,7 @@ if (app.Environment.IsDevelopment())
 
 // use these
 app.UseAuthorization();
+app.UseAuthentication();
 
 // serve static files settings
 // environment variables take priority
@@ -48,9 +50,19 @@ if (fileLocation == null)
     Console.WriteLine("[FATAL]: fileLocation not provided.");
     return;
 }
+if (!Directory.Exists(fileLocation))
+{
+    Console.WriteLine("[WARNING]: fileLocation does not exist, creating.");
+    Directory.CreateDirectory(fileLocation);
+}
 if (fileRequestPath == null)
 {
     Console.WriteLine("[FATAL]: fileRequestPath not provided.");
+    return;
+}
+if (!Uri.IsWellFormedUriString(fileRequestPath, UriKind.Relative))
+{
+    Console.WriteLine("[FATAL]: fileRequestPath failed IsWellFormedUriString.UriKind.Relative test.");
     return;
 }
 
@@ -72,11 +84,25 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 // map controllers in \Controllers\ folder
-// app.MapControllers();
+app.MapControllers();
 
 // add a system ping endpoint (for testing!):
 Console.WriteLine("[INFO]: Mapped: [/sele-system/ping]=>[{[sele-system]: pong!}].");
-app.MapGet("sele-system/ping", () => "{[sele-system]: pong!}");
+app.MapGet("sele-system/ping", () =>
+{
+    Console.WriteLine($"[INFO]: [sele-system/ping]: sele was pinged->[pong!].");
+    return "{[sele-system]: pong!}";
+});
+
+// add a system file count endpoint:
+Console.WriteLine("[INFO]: Mapped: [/sele-system/file-count]=>[{[sele-system]: found {count} file(s)}].");
+app.MapGet("sele-system/file-count", () =>
+{
+    var was = $"{fileCount}";
+    fileCount = Directory.GetFiles(fileLocation, "*", SearchOption.AllDirectories).Length;
+    Console.WriteLine($"[INFO]: [sele-system/file-count]: [{was}=>{fileCount}].");
+    return "{[sele-system]: found " + fileCount + " file(s)}";
+});
 
 // logging:
 app.UseHttpLogging();
@@ -87,7 +113,8 @@ Console.WriteLine($"[INFO]: --- START OF ASP.NET LOGGING ---");
 
 // run web application
 // on given port
-app.Run($"http://localhost:{portNumber}");
+try { await app.RunAsync($"http://*:{portNumber}"); }
+catch (Exception ex) { Console.WriteLine($"[EXCEPTION]: {ex.Message}."); }
 
 // more logging:
 Console.WriteLine($"[INFO]: --- END OF ASP.NET LOGGING ---");
