@@ -15,9 +15,9 @@ VERSION=$(cat ../VERSION)"dev"
 
 # action (docker commands with logs)
 # log command
-echo "[CMD]: docker buildx build -t $PROJECT:$VERSION .."
+echo "[CMD]: docker build --no-cache -t $PROJECT:$VERSION .."
 # run docker buildx with all kinds of options
-docker buildx build -t $PROJECT:$VERSION ..
+docker build --no-cache -t $PROJECT:$VERSION ..
 # log command
 echo "[CMD]: docker tag $PROJECT:$VERSION $PROFILE/$PROJECT:$VERSION"
 # run docker tag with all kinds of options
@@ -28,4 +28,4 @@ echo "[CMD]: docker push $PROFILE/$PROJECT:$VERSION"
 docker push $PROFILE/$PROJECT:$VERSION
 
 # finished
-echo "[INFO]: FINISHED dev"
+echo "[INFO]: FINISHED dev ($PROFILE/$PROJECT:$VERSION)."

@@ -351,3 +351,5 @@ MigrationBackup/
 
 # user added settings
 /src/Properties
+.vscode
+docker.static.files

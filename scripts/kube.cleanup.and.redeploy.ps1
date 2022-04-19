@@ -11,7 +11,7 @@ Write-Host "[CMD]: kubectl get all"
 kubectl get all
 
 # apply new deployment
-Write-Host "[CMD]: apply -f ./../kube.deploy.yml"
+Write-Host "[CMD]: kubectl apply -f ./../kube.deploy.yml"
 kubectl apply -f ./../kube.deploy.yml
 
 # show new deployment
